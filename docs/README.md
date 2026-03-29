@@ -4,6 +4,10 @@ iOS SDK for **SSL/TLS certificate pinning** using a **remote, cryptographically 
 
 Solves the main limitation of traditional SSL pinning — hardcoded certificates require a full app update to rotate keys. This SDK fetches pins from a remote endpoint and verifies them with a signature, allowing safe key rotation without releasing a new app version.
 
+## Sample APP
+
+![](sample-app.png#center)
+
 ## Requirements
 
 - iOS **15.0+** / macOS **12.0+**
