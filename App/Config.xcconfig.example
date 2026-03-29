@@ -1,0 +1,5 @@
+// Copy this file to Config.xcconfig and fill in your real values.
+// Config.xcconfig is in .gitignore and must NOT be committed.
+
+SSL_PINNING_ENDPOINT = https://example.com/api/ssl-pinning.json
+SSL_PINNING_SIGNING_KEY_B64 = YOUR_BASE64_PUBLIC_KEY_HERE
