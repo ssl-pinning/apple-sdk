@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ssl-pinning / apple-sdk</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      line-height: 1.6;
+    }
+
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header { border-bottom: 1px solid #21262d; padding: 20px 0; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    .logo { font-size: 1.15rem; font-weight: 600; color: #e6edf3; }
+    .logo span { color: #8b949e; font-weight: 400; }
+
+    .hero { padding: 64px 0 52px; border-bottom: 1px solid #21262d; }
+    .hero h1 {
+      font-size: 2rem; font-weight: 700; letter-spacing: -0.02em;
+      margin-bottom: 14px; line-height: 1.25;
+    }
+    .hero p { font-size: 1.05rem; color: #8b949e; max-width: 620px; margin-bottom: 28px; }
+
+    .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge {
+      font-size: 0.75rem; font-weight: 500; padding: 4px 12px;
+      border-radius: 20px; border: 1px solid #30363d; color: #8b949e;
+    }
+    .badge.blue  { border-color: #1f6feb; color: #58a6ff; background: rgba(31,111,235,.08); }
+    .badge.green { border-color: #238636; color: #3fb950; background: rgba(35,134,54,.08); }
+    .badge.gray  { background: rgba(255,255,255,.04); }
+
+    .content { padding: 56px 0 64px; }
+    .grid { display: grid; grid-template-columns: 1fr 272px; gap: 52px; }
+
+    .section { margin-bottom: 52px; }
+    h2 {
+      font-size: 1.05rem; font-weight: 600; margin-bottom: 20px;
+      padding-bottom: 10px; border-bottom: 1px solid #21262d;
+    }
+    h3 {
+      font-size: 0.75rem; font-weight: 600; color: #8b949e;
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+    }
+
+    .step { display: flex; gap: 16px; margin-bottom: 32px; }
+    .step:last-child { margin-bottom: 0; }
+    .step-num {
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+      background: #161b22; border: 1px solid #30363d;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 600; color: #8b949e; margin-top: 3px;
+    }
+    .step-body { flex: 1; min-width: 0; }
+    .step-body > p { color: #8b949e; font-size: 0.875rem; margin-bottom: 10px; }
+
+    pre {
+      background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+      padding: 14px 16px; overflow-x: auto; font-size: 0.82rem;
+      line-height: 1.55; margin-bottom: 10px;
+    }
+    code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+    .ic {
+      background: #161b22; border: 1px solid #30363d; border-radius: 3px;
+      padding: 1px 5px; font-size: 0.8em;
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .cm { color: #8b949e; } .kw { color: #ff7b72; } .st { color: #a5d6ff; }
+    .nm { color: #79c0ff; } .vl { color: #a8ff80; } .op { color: #ff7b72; }
+    .ty { color: #ffa657; } .fn { color: #d2a8ff; }
+
+    .note {
+      background: rgba(13,42,24,.6); border: 1px solid #238636; border-radius: 6px;
+      padding: 10px 14px; font-size: 0.83rem; color: #adbac7; margin-top: 10px;
+    }
+    .note strong { color: #3fb950; }
+    .warn {
+      background: rgba(40,30,0,.6); border: 1px solid #9e6a03; border-radius: 6px;
+      padding: 10px 14px; font-size: 0.83rem; color: #adbac7; margin-top: 10px;
+    }
+    .warn strong { color: #e3b341; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    th {
+      text-align: left; padding: 8px 10px; color: #8b949e;
+      border-bottom: 1px solid #21262d; font-weight: 600;
+      font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    td { padding: 9px 10px; border-bottom: 1px solid #161b22; vertical-align: top; }
+    td:first-child code { color: #79c0ff; }
+    td.dim { color: #8b949e; }
+    tr:last-child td { border-bottom: none; }
+
+    .subsection { margin-bottom: 28px; }
+    .subsection:last-child { margin-bottom: 0; }
+    .subsection h3 { margin-bottom: 12px; border-bottom: 1px solid #161b22; padding-bottom: 6px; }
+
+    .sidebar { position: sticky; top: 24px; align-self: start; }
+    .sidebar-section { margin-bottom: 24px; }
+    .sidebar-section h3 { margin-bottom: 10px; }
+    .sidebar-link { display: block; font-size: 0.875rem; color: #8b949e; padding: 4px 0; }
+    .sidebar-link:hover { color: #58a6ff; text-decoration: none; }
+
+    .info-box {
+      background: #161b22; border: 1px solid #30363d;
+      border-radius: 8px; padding: 16px; font-size: 0.83rem; margin-bottom: 24px;
+    }
+    .info-box h3 { margin-bottom: 12px; border: none; padding: 0; }
+    .info-row { display: flex; justify-content: space-between; padding: 5px 0; color: #8b949e; border-bottom: 1px solid #21262d; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row span:last-child { color: #e6edf3; }
+
+    footer { border-top: 1px solid #21262d; padding: 28px 0; font-size: 0.83rem; color: #8b949e; }
+    .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .footer-links { display: flex; gap: 20px; }
+
+    @media (max-width: 760px) {
+      .grid { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .hero h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="logo">ssl-pinning <span>/</span> apple-sdk</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <section class="hero">
+    <h1>Dynamic SSL Pinning<br>for iOS &amp; macOS</h1>
+    <p>Swift SDK for SSL/TLS certificate pinning using a remote, cryptographically signed key
+    registry — enabling pin rotation without releasing a new app version.</p>
+    <div class="badges">
+      <span class="badge blue">Swift Package</span>
+      <span class="badge gray">iOS 15+</span>
+      <span class="badge gray">macOS 12+</span>
+      <span class="badge gray">Swift 6.1+</span>
+      <span class="badge green">BSD-3-Clause</span>
+    </div>
+  </section>
+
+  <div class="content">
+    <div class="grid">
+
+      <div>
+
+        <!-- Installation -->
+        <section class="section" id="installation">
+          <h2>Installation</h2>
+
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Add via Xcode</h3>
+              <p><strong style="color:#e6edf3">File → Add Package Dependencies</strong> and enter the repository URL, or add to your <span class="ic">Package.swift</span>:</p>
+              <pre><code><span class="nm">dependencies</span>: [
+    .<span class="fn">package</span>(<span class="nm">url</span>: <span class="st">"https://github.com/ssl-pinning/apple-sdk.git"</span>, <span class="nm">from</span>: <span class="st">"0.1.0"</span>),
+],
+<span class="nm">targets</span>: [
+    .<span class="fn">target</span>(<span class="nm">name</span>: <span class="st">"YourTarget"</span>, <span class="nm">dependencies</span>: [<span class="st">"SslPinning"</span>]),
+]</code></pre>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Get the public signing key</h3>
+              <p>Obtain the base64-encoded RSA public key from the server operator and store it in your app's configuration. For the sample app, put it in <span class="ic">App/Config.xcconfig</span>.</p>
+              <pre><code><span class="cm"># encode pub.pem to a single-line base64 string</span>
+base64 -i pub.pem | tr -d '\n'</code></pre>
+              <div class="warn">
+                <strong>Note:</strong> pass the output directly as <span class="ic">signingKeyBase64</span>.
+                The SDK accepts PEM text, <span class="ic">base64(PEM)</span>, or raw DER (SPKI).
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>Initialize the SDK</h3>
+              <pre><code><span class="kw">import</span> <span class="ty">SslPinning</span>
+
+<span class="kw">let</span> config = <span class="ty">SslPinningConfig</span>(
+    endpointUrl:    <span class="st">"https://ssl-pinning.example.com/api/v1/google.com.json"</span>,
+    signingKeyBase64: <span class="st">"&lt;base64 of pub.pem&gt;"</span>
+)
+
+<span class="kw">let</span> result = <span class="kw">await</span> <span class="ty">SslPinningClient</span>.<span class="fn">initialize</span>(config: config)
+
+<span class="kw">switch</span> result {
+<span class="kw">case</span> .<span class="fn">success</span>(<span class="kw">let</span> client):
+    <span class="kw">let</span> pinnedSession = client.<span class="fn">createPinnedSession</span>() <span class="cm">// use for all HTTPS requests</span>
+    <span class="kw">let</span> plainSession  = client.<span class="fn">createPlainSession</span>()  <span class="cm">// use only for non-pinned requests</span>
+<span class="kw">case</span> .<span class="fn">failure</span>(<span class="kw">let</span> error):
+    <span class="cm">// initialization failed — do not proceed with network requests</span>
+}</code></pre>
+              <div class="note">
+                <strong>async/await:</strong> <span class="ic">initialize()</span> is an
+                <span class="ic">async</span> function — call it from a
+                <span class="ic">Task</span> or <span class="ic">.task</span> view modifier.
+                Create the sessions <em>once</em> and reuse them for the lifetime of the session.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="section" id="how-it-works">
+          <h2>How It Works</h2>
+          <p style="color:#8b949e;font-size:.875rem;margin-bottom:20px;">
+            Initialization is a single async call that fetches, verifies, and pins in one step.
+          </p>
+          <table>
+            <thead><tr><th>#</th><th>Step</th></tr></thead>
+            <tbody>
+              <tr><td><code>1</code></td><td class="dim">Fetch the signed key registry from <code>endpointUrl</code> via HTTP GET</td></tr>
+              <tr><td><code>2</code></td><td class="dim">Verify the response signature using JCS canonicalization + RSA PKCS#1 v1.5 + SHA-512</td></tr>
+              <tr><td><code>3</code></td><td class="dim">Each verified key is bound to its <code>domainName</code> as an SPKI SHA-256 pin</td></tr>
+              <tr><td><code>4</code></td><td class="dim">A <code>URLSession</code> with a custom <code>URLSessionDelegate</code> is built for the pinned session</td></tr>
+              <tr><td><code>5</code></td><td class="dim">Both sessions (<code>pinned</code> and <code>plain</code>) are returned to the caller</td></tr>
+            </tbody>
+          </table>
+          <div class="warn" style="margin-top:14px">
+            <strong>Fails closed</strong> — initialization returns <span class="ic">.failure</span> if the endpoint is
+            unreachable, the response format is invalid, the cryptographic signature does not verify,
+            or the key list is empty.
+          </div>
+        </section>
+
+        <!-- Key Registry Format -->
+        <section class="section" id="registry">
+          <h2>Key Registry Response Format</h2>
+          <p style="color:#8b949e;font-size:.875rem;margin-bottom:16px;">
+            Your backend endpoint must return JSON in the following format.
+            See <a href="https://github.com/ssl-pinning/ssl-pinning">ssl-pinning/ssl-pinning</a> for the server implementation.
+          </p>
+          <pre><code>{
+  <span class="nm">"payload"</span>: {
+    <span class="nm">"keys"</span>: [
+      {
+        <span class="nm">"domainName"</span>: <span class="st">"www.example.com"</span>,
+        <span class="nm">"key"</span>:        <span class="st">"base64-encoded-sha256-spki-hash"</span>,
+        <span class="nm">"fqdn"</span>:       <span class="st">"www.example.com"</span>,
+        <span class="nm">"expire"</span>:     <span class="vl">5488607</span>,
+        <span class="nm">"date"</span>:       <span class="st">"2025-12-14T21:02:11Z"</span>
+      }
+    ]
+  },
+  <span class="nm">"signature"</span>: <span class="st">"BASE64_ENCODED_RSA_SHA512_SIGNATURE"</span>
+}</code></pre>
+          <table style="margin-top:14px">
+            <thead><tr><th>Field</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>domainName</code></td><td class="dim">Hostname pattern for SPKI pinning. Supports wildcards: <code>*.example.com</code> matches one subdomain level.</td></tr>
+              <tr><td><code>key</code></td><td class="dim">Base64-encoded SHA-256 hash of the certificate's Subject Public Key Info (SPKI).</td></tr>
+              <tr><td><code>fqdn</code></td><td class="dim">Optional. The fully-qualified domain name the server dialed to extract the key.</td></tr>
+              <tr><td><code>expire</code></td><td class="dim">Optional. Unix timestamp (seconds) after which the key should be considered expired.</td></tr>
+              <tr><td><code>signature</code></td><td class="dim">RSA PKCS#1 v1.5 + SHA-512 over the <strong>JCS-canonicalized JSON</strong> of the <code>payload</code> field.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Cryptography -->
+        <section class="section" id="crypto">
+          <h2>Cryptography</h2>
+          <table>
+            <thead><tr><th>Property</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td><code>Canonicalization</code></td><td class="dim">JSON Canonicalization Scheme (JCS, RFC 8785) — implemented in pure Swift</td></tr>
+              <tr><td><code>Signature algorithm</code></td><td class="dim">RSA PKCS#1 v1.5</td></tr>
+              <tr><td><code>Hash function</code></td><td class="dim">SHA-512 (signature) · SHA-256 (SPKI pin)</td></tr>
+              <tr><td><code>Public key format</code></td><td class="dim">PEM · base64(PEM) · DER/SPKI — RSA 1024 / 2048 / 4096 bit</td></tr>
+              <tr><td><code>Pin type</code></td><td class="dim">SPKI SHA-256 (leaf certificate only)</td></tr>
+              <tr><td><code>Frameworks</code></td><td class="dim">Security.framework · CryptoKit · Foundation only — no third-party dependencies</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Security Properties -->
+        <section class="section" id="security">
+          <h2>Security Properties</h2>
+          <table>
+            <thead><tr><th>Property</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><code>MITM protection</code></td><td class="dim">Validates leaf certificate SPKI hash against a verified remote registry</td></tr>
+              <tr><td><code>Custom CA injection</code></td><td class="dim">Blocked — pinning bypasses the system trust store for pinned domains</td></tr>
+              <tr><td><code>Key substitution</code></td><td class="dim">Prevented via RSA-SHA512 cryptographic signature on the registry payload</td></tr>
+              <tr><td><code>Key rotation</code></td><td class="dim">Remote — no app update required; update the registry on the server</td></tr>
+              <tr><td><code>Binary hardcoding</code></td><td class="dim">None — no pins are embedded in the app binary</td></tr>
+              <tr><td><code>Wildcard matching</code></td><td class="dim"><code>*.example.com</code> matches exactly one subdomain level, never the apex</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Sample App -->
+        <section class="section" id="sample-app">
+          <h2>Sample App</h2>
+          <p style="color:#8b949e;font-size:.875rem;margin-bottom:16px;">
+            The repository includes a SwiftUI sample app demonstrating SDK usage — toggle between
+            pinned and plain sessions, send requests, and inspect response headers in a debug log.
+          </p>
+
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Copy the config template</h3>
+              <pre><code>cp App/Config.xcconfig.example App/Config.xcconfig</code></pre>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Fill in your values</h3>
+              <pre><code><span class="nm">SLASH</span>                    = /
+<span class="nm">SSL_PINNING_ENDPOINT</span>     = https:$(SLASH)$(SLASH)ssl-pinning.example.com/api/v1/google.com.json
+<span class="nm">SSL_PINNING_SIGNING_KEY_B64</span> = &lt;base64 of pub.pem&gt;</code></pre>
+              <div class="note">
+                <strong>Note:</strong> <span class="ic">$(SLASH)</span> is required because
+                <span class="ic">//</span> is treated as a comment in xcconfig files.
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>Open and run</h3>
+              <p>Open <span class="ic">SslPinning.xcworkspace</span> in Xcode, select the <span class="ic">App</span> scheme, and run on a simulator or device.</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+
+        <div class="info-box">
+          <h3>SDK info</h3>
+          <div class="info-row"><span>Version</span><span>0.1.0</span></div>
+          <div class="info-row"><span>Swift</span><span>6.1+</span></div>
+          <div class="info-row"><span>iOS</span><span>15.0+</span></div>
+          <div class="info-row"><span>macOS</span><span>12.0+</span></div>
+          <div class="info-row"><span>License</span><span>BSD-3-Clause</span></div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>On this page</h3>
+          <a class="sidebar-link" href="#installation">Installation</a>
+          <a class="sidebar-link" href="#how-it-works">How It Works</a>
+          <a class="sidebar-link" href="#registry">Key Registry Format</a>
+          <a class="sidebar-link" href="#crypto">Cryptography</a>
+          <a class="sidebar-link" href="#security">Security Properties</a>
+          <a class="sidebar-link" href="#sample-app">Sample App</a>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>Links</h3>
+          <a class="sidebar-link" href="https://github.com/ssl-pinning/apple-sdk">GitHub — Apple SDK</a>
+          <a class="sidebar-link" href="https://github.com/ssl-pinning/android-sdk">GitHub — Android SDK</a>
+          <a class="sidebar-link" href="https://github.com/ssl-pinning/ssl-pinning">GitHub — Server</a>
+          <a class="sidebar-link" href="https://ssl-pinning.github.io/charts">Helm Charts</a>
+        </div>
+
+      </aside>
+
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <span>ssl-pinning / apple-sdk — BSD-3-Clause</span>
+      <div class="footer-links">
+        <a href="https://github.com/ssl-pinning/apple-sdk">GitHub</a>
+        <a href="https://ssl-pinning.github.io/android-sdk">Android SDK</a>
+        <a href="https://ssl-pinning.github.io/ssl-pinning">Server</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
