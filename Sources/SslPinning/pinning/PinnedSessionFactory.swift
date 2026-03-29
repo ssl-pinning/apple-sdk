@@ -109,7 +109,7 @@ enum PinnedSessionFactory {
     static func create(keys: [KeysResponse.KeyItem]) -> URLSession {
         let delegate = PinningDelegate(keys: keys)
         return URLSession(
-            configuration: .default,
+            configuration: .ephemeral,
             delegate: delegate,
             delegateQueue: nil
         )

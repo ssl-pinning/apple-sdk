@@ -28,14 +28,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		EC1A2B3C2F79866F004670B0 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		ECF352F02F79866D004670B0 /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECF352FD2F79866F004670B0 /* AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECF353072F79866F004670B0 /* AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		EC1A2B3C2F79866F004670B0 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		EC1A2B4A2F79866F004670B0 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		ECCF00012F79866F004670B0 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -48,7 +48,7 @@
 		ECF352F22F79866D004670B0 /* App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				EC1A2B4A2F79866F004670B0 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+				ECCF00012F79866F004670B0 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -217,7 +217,7 @@
 			mainGroup = ECF352E72F79866D004670B0;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				ECF353262F7986FD004670B0 /* XCLocalSwiftPackageReference "../SslPinning" */,
+				ECF353262F7986FD004670B0 /* XCLocalSwiftPackageReference ".." */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = ECF352F12F79866D004670B0 /* Products */;
