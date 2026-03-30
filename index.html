@@ -159,6 +159,50 @@
     <div class="grid">
 
       <div>
+        <!-- Sample App -->
+        <section class="section" id="sample-app">
+          <h2>Sample App</h2>
+          <p style="color:#8b949e;font-size:.875rem;margin-bottom:16px;">
+            The repository includes a SwiftUI sample app demonstrating SDK usage — toggle between
+            pinned and plain sessions, send requests, and inspect response headers in a debug log.
+          </p>
+
+          <div style="margin-bottom:28px;text-align:center;">
+            <img src="https://raw.githubusercontent.com/ssl-pinning/apple-sdk/refs/heads/master/docs/sample-app.png"
+                 alt="Sample App screenshot"
+                 style="max-width:100%;border-radius:8px;border:1px solid #30363d;" />
+          </div>
+
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Copy the config template</h3>
+              <pre><code>cp App/Config.xcconfig.example App/Config.xcconfig</code></pre>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Fill in your values</h3>
+              <pre><code><span class="nm">SLASH</span>                    = /
+<span class="nm">SSL_PINNING_ENDPOINT</span>     = https:$(SLASH)$(SLASH)ssl-pinning.example.com/api/v1/google.com.json
+<span class="nm">SSL_PINNING_SIGNING_KEY_B64</span> = &lt;base64 of pub.pem&gt;</code></pre>
+              <div class="note">
+                <strong>Note:</strong> <span class="ic">$(SLASH)</span> is required because
+                <span class="ic">//</span> is treated as a comment in xcconfig files.
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>Open and run</h3>
+              <p>Open <span class="ic">SslPinning.xcworkspace</span> in Xcode, select the <span class="ic">App</span> scheme, and run on a simulator or device.</p>
+            </div>
+          </div>
+        </section>
 
         <!-- Installation -->
         <section class="section" id="installation">
@@ -308,45 +352,6 @@ base64 -i pub.pem | tr -d '\n'</code></pre>
               <tr><td><code>Wildcard matching</code></td><td class="dim"><code>*.example.com</code> matches exactly one subdomain level, never the apex</td></tr>
             </tbody>
           </table>
-        </section>
-
-        <!-- Sample App -->
-        <section class="section" id="sample-app">
-          <h2>Sample App</h2>
-          <p style="color:#8b949e;font-size:.875rem;margin-bottom:16px;">
-            The repository includes a SwiftUI sample app demonstrating SDK usage — toggle between
-            pinned and plain sessions, send requests, and inspect response headers in a debug log.
-          </p>
-
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-body">
-              <h3>Copy the config template</h3>
-              <pre><code>cp App/Config.xcconfig.example App/Config.xcconfig</code></pre>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-body">
-              <h3>Fill in your values</h3>
-              <pre><code><span class="nm">SLASH</span>                    = /
-<span class="nm">SSL_PINNING_ENDPOINT</span>     = https:$(SLASH)$(SLASH)ssl-pinning.example.com/api/v1/google.com.json
-<span class="nm">SSL_PINNING_SIGNING_KEY_B64</span> = &lt;base64 of pub.pem&gt;</code></pre>
-              <div class="note">
-                <strong>Note:</strong> <span class="ic">$(SLASH)</span> is required because
-                <span class="ic">//</span> is treated as a comment in xcconfig files.
-              </div>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-body">
-              <h3>Open and run</h3>
-              <p>Open <span class="ic">SslPinning.xcworkspace</span> in Xcode, select the <span class="ic">App</span> scheme, and run on a simulator or device.</p>
-            </div>
-          </div>
         </section>
 
       </div>
