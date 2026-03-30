@@ -5,6 +5,10 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'App/**/*.swift'
+      - 'Sources/**/*.swift'
+      - 'Tests/**/*.swift'
 
 jobs:
   test:

@@ -1,0 +1,37 @@
+name: Update gh pages
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    env:
+      IMAGE_NAME: ssl-pinning
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Update versions in docs
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+          git fetch origin gh-pages
+          git checkout gh-pages
+
+          sed -i "s|<span>Version</span><span>[^<]*</span>|<span>Version</span><span>${{ github.ref_name }}</span>|g" index.html
+          sed -i -E '/apple-sdk.git/ s|(from</span>: <span class="st">")[0-9.]+(")|\1'"${{ github.ref_name }}"'\2|' index.html
+
+          git add index.html
+          git diff --staged --quiet || git commit -m "docs: update versions to ${{ github.ref_name }} [skip ci]"
+          git push origin gh-pages
