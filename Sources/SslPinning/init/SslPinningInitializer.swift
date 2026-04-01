@@ -18,7 +18,7 @@ struct SslPinningInitializer {
         self.fetcher = fetcher
     }
 
-    func initialize(config: SslPinningConfig) async throws -> (pinned: URLSession, plain: URLSession) {
+    func initialize(config: SslPinningConfig) async throws -> URLSession {
         let response = try await fetcher.fetch(from: config.endpointUrl)
         let payloadData = try JSONEncoder().encode(response.payload)
         try SignatureVerifier.verifyPayloadSignature(
@@ -29,8 +29,6 @@ struct SslPinningInitializer {
         guard !response.payload.keys.isEmpty else {
             throw SslPinningError.emptyKeyRegistry
         }
-        let pinned = PinnedSessionFactory.create(keys: response.payload.keys)
-        let plain = PinnedSessionFactory.createPlain()
-        return (pinned: pinned, plain: plain)
+        return PinnedSessionFactory.create(keys: response.payload.keys)
     }
 }

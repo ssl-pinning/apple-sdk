@@ -1,2 +1,2 @@
-// SslPinning — iOS SSL certificate pinning SDK.
+// SslPinning — embedded SSL certificate pinning module.
 // Public API: SslPinningConfig, SslPinningClient

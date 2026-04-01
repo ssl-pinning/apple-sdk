@@ -2,120 +2,142 @@ import Foundation
 import Security
 import CryptoKit
 
-/// URLSessionDelegate that pins SPKI SHA-256 hashes of server certificates.
-final class PinningDelegate: NSObject, URLSessionDelegate, @unchecked Sendable {
-    private let keys: [KeysResponse.KeyItem]
+// MARK: - PinningDelegate
 
-    init(keys: [KeysResponse.KeyItem]) {
-        self.keys = keys
+final class PinningDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelegate, @unchecked Sendable {
+    private let pinnedHashes: [String]
+
+    init(pinnedHashes: [String]) {
+        self.pinnedHashes = pinnedHashes
     }
 
-    // Exposed for testing
-    func testDomainMatches(pattern: String, host: String) -> Bool {
-        domainMatches(pattern: pattern, host: host)
-    }
-
-    nonisolated func urlSession(
+    func urlSession(
         _ session: URLSession,
         didReceive challenge: URLAuthenticationChallenge,
-        completionHandler: @escaping @Sendable (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
     ) {
-        guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-              let serverTrust = challenge.protectionSpace.serverTrust else {
-            completionHandler(.cancelAuthenticationChallenge, nil)
-            return
-        }
-
-        let host = challenge.protectionSpace.host
-        let pinnedKeys = keys.filter { domainMatches(pattern: $0.domainName, host: host) }
-
-        if pinnedKeys.isEmpty {
+        guard
+            challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+            let serverTrust = challenge.protectionSpace.serverTrust
+        else {
             completionHandler(.performDefaultHandling, nil)
             return
         }
 
-        guard let spkiHash = extractLeafSPKIHash(from: serverTrust) else {
+        var certificates: [SecCertificate] = []
+        if let chain = SecTrustCopyCertificateChain(serverTrust) as? [SecCertificate] {
+            certificates = chain
+        }
+
+        guard let hash = spkiHashFromDER(cert: certificates[0]) else {
             completionHandler(.cancelAuthenticationChallenge, nil)
             return
         }
 
-        if pinnedKeys.contains(where: { $0.key == spkiHash }) {
+        if pinnedHashes.contains(hash) {
             completionHandler(.useCredential, URLCredential(trust: serverTrust))
         } else {
             completionHandler(.cancelAuthenticationChallenge, nil)
         }
     }
 
-    private func domainMatches(pattern: String, host: String) -> Bool {
-        let p = pattern.lowercased().trimmingCharacters(in: .whitespaces)
-        let h = host.lowercased()
-        if p.hasPrefix("*.") {
-            let suffix = "." + String(p.dropFirst(2))
-            guard h.hasSuffix(suffix) else { return false }
-            let subdomain = String(h.dropLast(suffix.count))
-            return !subdomain.isEmpty && !subdomain.contains(".")
-        }
-        return p == h
-    }
+    // MARK: - SPKI hash extraction (mirrors Go's sha256(cert.RawSubjectPublicKeyInfo))
 
-    private func extractLeafSPKIHash(from serverTrust: SecTrust) -> String? {
-        guard let chain = SecTrustCopyCertificateChain(serverTrust) as? [SecCertificate],
-              let leaf = chain.first,
-              let publicKey = SecCertificateCopyKey(leaf),
-              let keyData = SecKeyCopyExternalRepresentation(publicKey, nil) as Data? else {
+    private func spkiHashFromDER(cert: SecCertificate) -> String? {
+        let certDER = SecCertificateCopyData(cert) as Data
+        guard let spki = extractSPKIFromCertDER(certDER) else {
             return nil
         }
-        guard let header = spkiHeader(for: publicKey) else { return nil }
-
-        var spki = Data(header)
-        spki.append(keyData)
-        let hash = SHA256.hash(data: spki)
-        return Data(hash).base64EncodedString()
+        let hash = Data(SHA256.hash(data: spki)).base64EncodedString()
+        return hash
     }
 
-    private func spkiHeader(for key: SecKey) -> [UInt8]? {
-        guard let attrs = SecKeyCopyAttributes(key) as? [String: Any] else { return nil }
-        let type = attrs[kSecAttrKeyType as String] as? String
-        let size = attrs[kSecAttrKeySizeInBits as String] as? Int
+    private func extractSPKIFromCertDER(_ der: Data) -> Data? {
+        var idx = der.startIndex
 
-        let rsaType = kSecAttrKeyTypeRSA as String
-        let ecType = kSecAttrKeyTypeEC as String
+        // 1. Certificate — outer SEQUENCE
+        guard let certContent = readDERSequenceContent(der, idx: &idx) else { return nil }
+        var tbsIdx = certContent.startIndex
 
-        switch (type, size) {
-        case (rsaType, 2048):
-            return [0x30, 0x82, 0x01, 0x22, 0x30, 0x0D, 0x06, 0x09,
-                    0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01,
-                    0x01, 0x05, 0x00, 0x03, 0x82, 0x01, 0x0F, 0x00]
-        case (rsaType, 4096):
-            return [0x30, 0x82, 0x02, 0x22, 0x30, 0x0D, 0x06, 0x09,
-                    0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01,
-                    0x01, 0x05, 0x00, 0x03, 0x82, 0x02, 0x0F, 0x00]
-        case (ecType, 256):
-            return [0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2A, 0x86,
-                    0x48, 0xCE, 0x3D, 0x02, 0x01, 0x06, 0x08, 0x2A,
-                    0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07, 0x03,
-                    0x42, 0x00]
-        case (ecType, 384):
-            return [0x30, 0x76, 0x30, 0x10, 0x06, 0x07, 0x2A, 0x86,
-                    0x48, 0xCE, 0x3D, 0x02, 0x01, 0x06, 0x05, 0x2B,
-                    0x81, 0x04, 0x00, 0x22, 0x03, 0x62, 0x00]
-        default:
-            return nil
+        // 2. TBSCertificate — first nested SEQUENCE
+        guard let tbsContent = readDERSequenceContent(certContent, idx: &tbsIdx) else { return nil }
+        var fieldIdx = tbsContent.startIndex
+
+        // 3. version [0] EXPLICIT — optional, tag 0xA0
+        if fieldIdx < tbsContent.endIndex && tbsContent[fieldIdx] == 0xA0 {
+            guard skipDERElement(tbsContent, idx: &fieldIdx) else { return nil }
         }
+
+        // serialNumber, signature, issuer, validity, subject — 5 fields
+        for _ in 0..<5 {
+            guard skipDERElement(tbsContent, idx: &fieldIdx) else { return nil }
+        }
+
+        // 4. subjectPublicKeyInfo — the next element
+        guard fieldIdx < tbsContent.endIndex else { return nil }
+        let spkiStart = fieldIdx
+        guard skipDERElement(tbsContent, idx: &fieldIdx) else { return nil }
+        let spkiEnd = fieldIdx
+
+        return tbsContent[spkiStart..<spkiEnd]
+    }
+
+    // MARK: - Minimal DER parser
+
+    private func readDERSequenceContent(_ data: Data, idx: inout Data.Index) -> Data? {
+        guard idx < data.endIndex, data[idx] == 0x30 else { return nil }
+        idx = data.index(after: idx)
+        guard let length = readDERLength(data, idx: &idx) else { return nil }
+        let start = idx
+        let end = data.index(start, offsetBy: length, limitedBy: data.endIndex) ?? data.endIndex
+        guard end <= data.endIndex else { return nil }
+        idx = end
+        return data[start..<end]
+    }
+
+    private func skipDERElement(_ data: Data, idx: inout Data.Index) -> Bool {
+        guard idx < data.endIndex else { return false }
+        idx = data.index(after: idx) // skip tag
+        guard let length = readDERLength(data, idx: &idx) else { return false }
+        guard let end = data.index(idx, offsetBy: length, limitedBy: data.endIndex) else { return false }
+        guard end <= data.endIndex else { return false }
+        idx = end
+        return true
+    }
+
+    private func readDERLength(_ data: Data, idx: inout Data.Index) -> Int? {
+        guard idx < data.endIndex else { return nil }
+        let first = data[idx]
+        idx = data.index(after: idx)
+
+        if first & 0x80 == 0 {
+            return Int(first)
+        }
+
+        let numBytes = Int(first & 0x7F)
+        guard numBytes > 0, numBytes <= 4 else { return nil }
+        guard data.index(idx, offsetBy: numBytes, limitedBy: data.endIndex) != nil else { return nil }
+
+        var length = 0
+        for _ in 0..<numBytes {
+            guard idx < data.endIndex else { return nil }
+            length = (length << 8) | Int(data[idx])
+            idx = data.index(after: idx)
+        }
+        return length
     }
 }
 
+// MARK: - PinnedSessionFactory
+
 enum PinnedSessionFactory {
     static func create(keys: [KeysResponse.KeyItem]) -> URLSession {
-        let delegate = PinningDelegate(keys: keys)
+        let hashes = keys.map { $0.key }
+        let delegate = PinningDelegate(pinnedHashes: hashes)
         return URLSession(
-            configuration: .ephemeral,
+            configuration: .default,
             delegate: delegate,
             delegateQueue: nil
         )
-    }
-
-    static func createPlain() -> URLSession {
-        URLSession(configuration: .default)
     }
 }

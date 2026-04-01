@@ -39,7 +39,6 @@ enum SignatureVerifier {
         guard let firstDecode = Data(base64Encoded: cleaned) else {
             throw VerifierError.invalidPublicKey
         }
-        // Handle base64(PEM): after first decode we may get a PEM text
         let keyData: Data
         if let pem = String(data: firstDecode, encoding: .utf8),
            pem.contains("-----BEGIN PUBLIC KEY-----") {
@@ -54,7 +53,6 @@ enum SignatureVerifier {
             }
             keyData = derData
         } else {
-            // Already DER (possibly SPKI-wrapped or plain PEM headers stripped externally)
             keyData = firstDecode
         }
         let pkcs1Data = stripSPKIHeaderIfPresent(keyData)

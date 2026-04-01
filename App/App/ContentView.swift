@@ -173,8 +173,8 @@ struct ContentView: View {
         let result = await SslPinningClient.initialize(config: config)
         switch result {
         case .success(let client):
-            pinnedSession = client.createPinnedSession()
-            plainSession = client.createPlainSession()
+            pinnedSession = client.create()
+            plainSession = URLSession(configuration: .default)
             appState = .ready
         case .failure(let error):
             appState = .error(error.localizedDescription)
